@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner QR Express</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html5-qrcode Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Ajuste de video de la cámara */
+        #qr-reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 1rem;
+        }
+        #qr-reader {
+            border: none !important;
+        }
+
+        /* Animación de escaneo */
+        @keyframes scan-line {
+            0% { top: 5%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0.8; }
+        }
+        .scanner-line {
+            position: absolute;
+            left: 5%;
+            width: 90%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #6366f1, #a855f7, transparent);
+            box-shadow: 0 0 15px #6366f1;
+            animation: scan-line 2.2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header simple -->
+    <header class="py-4 px-6 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-qrcode text-white text-lg"></i>
+                </div>
+                <h1 class="text-lg font-bold text-white tracking-tight">Lector QR Express</h1>
+            </div>
+            <div id="status-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                <span class="w-2 h-2 rounded-full bg-slate-500" id="status-dot"></span>
+                <span id="status-text">Listo</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-between space-y-4">
+
+        <!-- Notificación Toast -->
+        <div id="toast" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-2xl text-xs font-semibold flex items-center space-x-2 z-50 transition-all">
+            <i id="toast-icon" class="fa-solid fa-check"></i>
+            <span id="toast-msg"></span>
+        </div>
+
+        <!-- Visor de Cámara / Escáner -->
+        <div class="relative w-full aspect-square bg-slate-900 rounded-3xl border-2 border-slate-800 overflow-hidden shadow-2xl flex flex-col items-center justify-center">
+            
+            <!-- Contenedor del video HTML5QR -->
+            <div id="qr-reader" class="w-full h-full"></div>
+
+            <!-- Línea animada de escaneo (visible cuando está escaneando) -->
+            <div id="scan-overlay-line" class="hidden scanner-line z-20 pointer-events-none"></div>
+
+            <!-- Pantalla inicial de bienvenida / permiso -->
+            <div id="start-overlay" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center z-30 space-y-4">
+                <div class="w-20 h-20 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-3xl">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-white">Lector Directo de QR</h2>
+                    <p class="text-xs text-slate-400 mt-1.5 max-w-xs leading-relaxed">
+                        Presiona el botón para activar la cámara y leer cualquier código QR de forma instantánea.
+                    </p>
+                </div>
+                <button onclick="startScanner()" class="w-full py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all duration-200 shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Activar Cámara</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Botones de Control de Cámara -->
+        <div id="controls-bar" class="hidden flex items-center gap-2">
+            <button id="btn-toggle-cam" onclick="stopScanner()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-power-off text-rose-400"></i>
+                <span>Detener Cámara</span>
+            </button>
+            
+            <button id="btn-torch" onclick="toggleTorch()" class="hidden py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-semibold text-xs transition flex items-center justify-center space-x-1.5">
+                <i id="torch-icon" class="fa-solid fa-bolt"></i>
+            </button>
+        </div>
+
+        <!-- TARJETA DE RESULTADO PROMINENTE (Aparece automáticamente al detectar) -->
+        <div id="result-card" class="hidden bg-slate-900 border-2 border-indigo-500/80 rounded-3xl p-5 shadow-2xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-400">¡Código Detectado!</span>
+                </div>
+                <button onclick="dismissResult()" class="text-slate-500 hover:text-slate-300 text-sm p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Texto escaneado -->
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <p id="result-content" class="text-sm font-medium text-slate-100 break-all max-h-40 overflow-y-auto font-mono leading-relaxed select-all"></p>
+            </div>
+
+            <!-- Acciones directas -->
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="copyResultText()" class="py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Copiar Texto</span>
+                </button>
+
+                <a id="btn-open-url" href="#" target="_blank" rel="noopener noreferrer" class="hidden py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>Abrir Enlace</span>
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="py-3 text-center text-[11px] text-slate-600">
+        Escáner QR Inmediato
+    </footer>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        let html5QrCode = null;
+        let isScanning = false;
+        let currentResult = '';
+        let torchActive = false;
+
+        // Iniciar visor al cargar la página
+        window.addEventListener('load', () => {
+            html5QrCode = new Html5Qrcode("qr-reader");
+            // Intenta iniciar automáticamente al abrir
+            startScanner();
+        });
+
+        async function startScanner() {
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (!devices || devices.length === 0) {
+                    showToast("No se encontró ninguna cámara en el dispositivo", true);
+                    return;
+                }
+
+                // Preferir cámara trasera si existe
+                const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('trasera')) || devices[devices.length - 1];
+                const cameraId = backCam ? backCam.id : devices[0].id;
+
+                const config = {
+                    fps: 15,
+                    qrbox: (viewWidth, viewHeight) => {
+                        const minDim = Math.min(viewWidth, viewHeight);
+                        return { width: Math.floor(minDim * 0.75), height: Math.floor(minDim * 0.75) };
+                    }
+                };
+
+                await html5QrCode.start(
+                    cameraId,
+                    config,
+                    onScanSuccess,
+                    () => {} // Ignorar errores de frame sin código
+                );
+
+                isScanning = true;
+                document.getElementById('start-overlay').classList.add('hidden');
+                document.getElementById('scan-overlay-line').classList.remove('hidden');
+                document.getElementById('controls-bar').classList.remove('hidden');
+
+                // Estado
+                updateStatus(true);
+                checkTorch();
+
+            } catch (err) {
+                console.error("Error al iniciar cámara:", err);
+                document.getElementById('start-overlay').classList.remove('hidden');
+                showToast("Por favor otorga permisos de acceso a la cámara", true);
+            }
+        }
+
+        async function stopScanner() {
+            if (html5QrCode && isScanning) {
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {
+                    console.warn(e);
+                }
+                isScanning = false;
+                document.getElementById('start-overlay').classList.remove('hidden');
+                document.getElementById('scan-overlay-line').classList.add('hidden');
+                document.getElementById('controls-bar').classList.add('hidden');
+                updateStatus(false);
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            currentResult = decodedText;
+
+            // Feedback sonoro/vibración rápido si el navegador lo soporta
+            if (navigator.vibrate) navigator.vibrate(100);
+
+            // Actualizar tarjeta de resultado de forma prominente
+            const resultContent = document.getElementById('result-content');
+            const resultCard = document.getElementById('result-card');
+            const btnOpenUrl = document.getElementById('btn-open-url');
+
+            resultContent.innerText = decodedText;
+
+            // Verificar si es una URL válida para habilitar el botón "Abrir Enlace"
+            if (isValidURL(decodedText)) {
+                btnOpenUrl.href = decodedText;
+                btnOpenUrl.classList.remove('hidden');
+            } else {
+                btnOpenUrl.classList.add('hidden');
+            }
+
+            // Mostrar tarjeta destacada
+            resultCard.classList.remove('hidden');
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            showToast("¡Código QR detectado!");
+        }
+
+        function dismissResult() {
+            document.getElementById('result-card').classList.add('hidden');
+        }
+
+        function copyResultText() {
+            if (!currentResult) return;
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = currentResult;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast("Copiado al portapapeles");
+        }
+
+        function isValidURL(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === "http:" || url.protocol === "https:";
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function checkTorch() {
+            try {
+                const capabilities = html5QrCode.getRunningTrackCapabilities();
+                const btnTorch = document.getElementById('btn-torch');
+                if (capabilities && capabilities.torch) {
+                    btnTorch.classList.remove('hidden');
+                } else {
+                    btnTorch.classList.add('hidden');
+                }
+            } catch (e) {
+                document.getElementById('btn-torch').classList.add('hidden');
+            }
+        }
+
+        async function toggleTorch() {
+            try {
+                torchActive = !torchActive;
+                await html5QrCode.applyVideoConstraints({
+                    advanced: [{ torch: torchActive }]
+                });
+                const btnTorch = document.getElementById('btn-torch');
+                btnTorch.classList.toggle('bg-amber-500/20', torchActive);
+            } catch (err) {
+                showToast("Linterna no disponible", true);
+            }
+        }
+
+        function updateStatus(active) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            if (active) {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+                text.innerText = "Escaneando";
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-slate-500";
+                text.innerText = "Detenido";
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = msg;
+            toastIcon.className = isError ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-check";
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 ${isError ? 'bg-rose-600' : 'bg-indigo-600'} text-white px-4 py-2 rounded-xl shadow-2xl text-xs font-semibold flex items-center space-x-2 z-50 transition-all`;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+    </script>
+</body>
+</html>
