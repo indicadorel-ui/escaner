@@ -42,14 +42,14 @@
             animation: scan-line 2.2s infinite ease-in-out;
         }
 
-        /* Clases para logos reducidos */
+        /* Clases para logos */
         .header-logo-img {
             height: 28px;
             width: auto;
             object-fit: contain;
         }
         .start-logo-img {
-            height: 48px;
+            height: 64px; /* Logo más grande */
             width: auto;
             object-fit: contain;
         }
@@ -61,7 +61,6 @@
     <header class="py-4 px-6 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-md mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2.5">
-                <!-- Logo de Intedi reducido en el encabezado -->
                 <img src="LOGO INTEDI.png" alt="INTEDI QR" class="header-logo-img">
             </div>
             <div id="status-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
@@ -91,8 +90,8 @@
 
             <!-- Pantalla inicial de bienvenida / permiso -->
             <div id="start-overlay" class="absolute inset-0 bg-white flex flex-col items-center justify-center p-6 text-center z-30 space-y-4">
-                <div class="w-20 h-20 rounded-3xl bg-red-50 border border-red-100 flex items-center justify-center shadow-sm">
-                    <!-- Logo del PRI reducido en lugar de la cámara -->
+                <!-- Sin fondo de color, contenedor limpio y transparente -->
+                <div class="flex items-center justify-center mb-2">
                     <img src="LOGO PRI.png" alt="Logo PRI" class="start-logo-img">
                 </div>
                 <div>
