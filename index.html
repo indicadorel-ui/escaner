@@ -41,6 +41,18 @@
             box-shadow: 0 0 15px rgb(224, 0, 24);
             animation: scan-line 2.2s infinite ease-in-out;
         }
+
+        /* Clases para logos reducidos */
+        .header-logo-img {
+            height: 28px;
+            width: auto;
+            object-fit: contain;
+        }
+        .start-logo-img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-white text-slate-800 antialiased selection:bg-red-600 selection:text-white">
@@ -49,7 +61,8 @@
     <header class="py-4 px-6 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-md mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2.5">
-                <h1 class="text-lg font-bold text-slate-900 tracking-tight">INTEDI QR</h1>
+                <!-- Logo de Intedi reducido en el encabezado -->
+                <img src="LOGO INTEDI.png" alt="INTEDI QR" class="header-logo-img">
             </div>
             <div id="status-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                 <span class="w-2 h-2 rounded-full bg-slate-400" id="status-dot"></span>
@@ -78,8 +91,9 @@
 
             <!-- Pantalla inicial de bienvenida / permiso -->
             <div id="start-overlay" class="absolute inset-0 bg-white flex flex-col items-center justify-center p-6 text-center z-30 space-y-4">
-                <div class="w-20 h-20 rounded-3xl bg-red-50 border border-red-100 flex items-center justify-center text-[rgb(224,0,24)] text-3xl shadow-sm">
-                    <i class="fa-solid fa-camera"></i>
+                <div class="w-20 h-20 rounded-3xl bg-red-50 border border-red-100 flex items-center justify-center shadow-sm">
+                    <!-- Logo del PRI reducido en lugar de la cámara -->
+                    <img src="LOGO PRI.png" alt="Logo PRI" class="start-logo-img">
                 </div>
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Lector Directo de QR</h2>
