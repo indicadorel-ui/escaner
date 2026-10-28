@@ -90,7 +90,6 @@
 
             <!-- Pantalla inicial de bienvenida / permiso -->
             <div id="start-overlay" class="absolute inset-0 bg-white flex flex-col items-center justify-center p-6 text-center z-30 space-y-4">
-                <!-- Sin fondo de color, contenedor limpio y transparente -->
                 <div class="flex items-center justify-center mb-2">
                     <img src="PRI.png" alt="PRI" class="start-logo-img">
                 </div>
@@ -136,13 +135,14 @@
                 <p id="result-content" class="text-sm font-medium text-slate-800 break-all max-h-40 overflow-y-auto font-mono leading-relaxed select-all"></p>
             </div>
 
-            <!-- Acción directa -->
+            <!-- Acción directa centrada -->
             <div class="flex justify-center">
                 <button onclick="copyResultText()" class="w-full py-3 px-4 rounded-xl bg-[rgb(224,0,24)] hover:bg-[rgb(180,0,18)] text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-red-600/20">
                     <i class="fa-solid fa-copy"></i>
                     <span>Capturar información</span>
                 </button>
-             </div>
+            </div>
+        </div>
 
     </main>
 
@@ -226,16 +226,8 @@
 
             const resultContent = document.getElementById('result-content');
             const resultCard = document.getElementById('result-card');
-            const btnOpenUrl = document.getElementById('btn-open-url');
 
             resultContent.innerText = decodedText;
-
-            if (isValidURL(decodedText)) {
-                btnOpenUrl.href = decodedText;
-                btnOpenUrl.classList.remove('hidden');
-            } else {
-                btnOpenUrl.classList.add('hidden');
-            }
 
             resultCard.classList.remove('hidden');
             resultCard.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -256,15 +248,6 @@
             document.execCommand("copy");
             document.body.removeChild(dummy);
             showToast("Información capturada");
-        }
-
-        function isValidURL(string) {
-            try {
-                const url = new URL(string);
-                return url.protocol === "http:" || url.protocol === "https:";
-            } catch (_) {
-                return false;
-            }
         }
 
         function checkTorch() {
