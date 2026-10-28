@@ -49,7 +49,7 @@
             object-fit: contain;
         }
         .start-logo-img {
-            height: 75px; /* Logo más grande */
+            height: 75px;
             width: auto;
             object-fit: contain;
         }
@@ -137,8 +137,8 @@
 
             <!-- Acción directa centrada -->
             <div class="flex justify-center">
-                <button onclick="copyResultText()" class="w-full py-3 px-4 rounded-xl bg-[rgb(224,0,24)] hover:bg-[rgb(180,0,18)] text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-red-600/20">
-                    <i class="fa-solid fa-copy"></i>
+                <button onclick="sendToGoogleSheet()" class="w-full py-3 px-4 rounded-xl bg-[rgb(224,0,24)] hover:bg-[rgb(180,0,18)] text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-red-600/20">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
                     <span>Capturar información</span>
                 </button>
             </div>
@@ -152,6 +152,8 @@
 
     <!-- Lógica JavaScript -->
     <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwN10y7eMEckQCwoCsgP00p2ug8oqY0JMl2As8YQgwIy777gk5dZ_m0xbGSjchh0Gg7/exec";
+
         let html5QrCode = null;
         let isScanning = false;
         let currentResult = '';
@@ -239,15 +241,29 @@
             document.getElementById('result-card').classList.add('hidden');
         }
 
-        function copyResultText() {
+        async function sendToGoogleSheet() {
             if (!currentResult) return;
-            const dummy = document.createElement("textarea");
-            document.body.appendChild(dummy);
-            dummy.value = currentResult;
-            dummy.select();
-            document.execCommand("copy");
-            document.body.removeChild(dummy);
-            showToast("Información capturada");
+
+            showToast("Enviando información...");
+
+            try {
+                const urlWithData = `${WEB_APP_URL}?data=${encodeURIComponent(currentResult)}`;
+                
+                await fetch(urlWithData, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+
+                showToast("¡Información guardada en Google Sheet!");
+                
+                setTimeout(() => {
+                    dismissResult();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error al enviar:", error);
+                showToast("Error al guardar en Google Sheet", true);
+            }
         }
 
         function checkTorch() {
