@@ -144,6 +144,17 @@
             </div>
         </div>
 
+        <!-- RECUADRO GRANDE VERDE DE ÉXITO (#29AB87) -->
+        <div id="success-overlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <div class="w-full max-w-sm bg-[#29AB87] text-white rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-4 scale-100 transition-transform">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-2">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold tracking-wide uppercase">¡INFORMACIÓN CAPTURADA!</h2>
+                <p class="text-sm text-emerald-50 font-medium">Los datos se han guardado correctamente en el sistema.</p>
+            </div>
+        </div>
+
     </main>
 
     <footer class="py-3 text-center text-[11px] text-slate-400">
@@ -152,14 +163,13 @@
 
     <!-- Lógica JavaScript -->
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAnBTfp4R38BXTpeNmSIZToDHbnj98xax9SsmcxxPvvubxOevCXDMtK-Fbioysr8Gb/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwN10y7eMEckQCwoCsgP00p2ug8oqY0JMl2As8YQgwIy777gk5dZ_m0xbGSjchh0Gg7/exec";
 
         let html5QrCode = null;
         let isScanning = false;
         let currentResult = '';
         let torchActive = false;
 
-        // Iniciar visor al cargar la página
         window.addEventListener('load', () => {
             html5QrCode = new Html5Qrcode("qr-reader");
             startScanner();
@@ -184,12 +194,7 @@
                     }
                 };
 
-                await html5QrCode.start(
-                    cameraId,
-                    config,
-                    onScanSuccess,
-                    () => {} 
-                );
+                await html5QrCode.start(cameraId, config, onScanSuccess, () => {});
 
                 isScanning = true;
                 document.getElementById('start-overlay').classList.add('hidden');
@@ -223,18 +228,14 @@
 
         function onScanSuccess(decodedText) {
             currentResult = decodedText;
-
             if (navigator.vibrate) navigator.vibrate(100);
 
             const resultContent = document.getElementById('result-content');
             const resultCard = document.getElementById('result-card');
 
             resultContent.innerText = decodedText;
-
             resultCard.classList.remove('hidden');
             resultCard.scrollIntoView({ behavior: 'smooth', block: 'end' });
-
-            showToast("¡Código QR detectado!");
         }
 
         function dismissResult() {
@@ -244,9 +245,11 @@
         async function sendToGoogleSheet() {
             if (!currentResult) return;
 
-            showToast("Enviando información...");
-
             try {
+                // Muestra el recuadro verde grande de éxito
+                const successOverlay = document.getElementById('success-overlay');
+                successOverlay.classList.remove('hidden');
+
                 const urlWithData = `${WEB_APP_URL}?data=${encodeURIComponent(currentResult)}`;
                 
                 await fetch(urlWithData, {
@@ -254,14 +257,15 @@
                     mode: 'no-cors'
                 });
 
-                showToast("¡Información guardada en Google Sheet!");
-                
+                // Oculta el recuadro verde y la tarjeta de resultado después de 1.8 segundos
                 setTimeout(() => {
+                    successOverlay.classList.add('hidden');
                     dismissResult();
-                }, 1500);
+                }, 1800);
 
             } catch (error) {
                 console.error("Error al enviar:", error);
+                document.getElementById('success-overlay').classList.add('hidden');
                 showToast("Error al guardar en Google Sheet", true);
             }
         }
