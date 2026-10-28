@@ -174,20 +174,31 @@
         let currentResult = '';
         let torchActive = false;
 
+        // Inicializamos únicamente la librería al cargar la página sin activar la cámara aún
         window.addEventListener('load', () => {
             html5QrCode = new Html5Qrcode("qr-reader");
-            startScanner();
         });
 
         async function startScanner() {
             try {
+                // Si ya había una instancia corriendo, la detenemos de forma segura
+                if (isScanning && html5QrCode) {
+                    await html5QrCode.stop().catch(() => {});
+                    isScanning = false;
+                }
+
                 const devices = await Html5Qrcode.getCameras();
                 if (!devices || devices.length === 0) {
                     showToast("No se encontró ninguna cámara en el dispositivo", true);
                     return;
                 }
 
-                const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('trasera') || d.label.toLowerCase().includes('environment')) || devices[devices.length - 1];
+                const backCam = devices.find(d => 
+                    d.label.toLowerCase().includes('back') || 
+                    d.label.toLowerCase().includes('trasera') || 
+                    d.label.toLowerCase().includes('environment')
+                ) || devices[devices.length - 1];
+
                 const cameraId = backCam ? backCam.id : devices[0].id;
 
                 const config = {
@@ -210,6 +221,7 @@
 
             } catch (err) {
                 console.error("Error al iniciar cámara:", err);
+                isScanning = false;
                 document.getElementById('start-overlay').classList.remove('hidden');
                 showToast("Por favor otorga permisos de acceso a la cámara", true);
             }
